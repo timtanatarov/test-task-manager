@@ -4,52 +4,22 @@ import { observable, action, makeObservable } from 'mobx';
 export interface Task {
     id: number;
     title: string;
+    description: string;
     completed: boolean;
-    children?: Task[];
+    children: Task[];
 }
 
-export class TaskStore {
-    tasks: Task[] = [
-        {
-            id: 1,
-            title: 'Task 1',
-            completed: false,
-            children: [
-                {
-                    id: 2,
-                    title: 'Subtask 1.1',
-                    completed: false,
-                },
-                {
-                    id: 3,
-                    title: 'Subtask 1.2',
-                    completed: false,
-                },
-            ],
-        },
-        {
-            id: 4,
-            title: 'Task 2',
-            completed: false,
-        },
-        {
-            id: 5,
-            title: 'Task 3',
-            completed: false,
-            children: [
-                {
-                    id: 6,
-                    title: 'Subtask 3.1',
-                    completed: false,
-                },
-            ],
-        },
-    ];
+class TaskStore {
+    tasks: Task[] = [];
+    selectedTask: Task | null = null;
 
     constructor() {
         makeObservable(this, {
             tasks: observable,
+            selectedTask: observable,
             toggleTaskCompletion: action,
+            createSubtask: action,
+            setSelectedTask: action,
         });
     }
 
@@ -58,6 +28,16 @@ export class TaskStore {
         if (task) {
             task.completed = !task.completed;
         }
+    }
+
+    createSubtask(task: Task) {
+        if (this.selectedTask) {
+            this.selectedTask.children.push(task);
+        }
+    }
+
+    setSelectedTask(task: Task) {
+        this.selectedTask = task;
     }
 
     private findTaskById(taskId: number): Task | undefined {
@@ -80,6 +60,8 @@ export class TaskStore {
     }
 }
 
-const StoreContext = createContext<TaskStore>(new TaskStore());
+const StoreContext = createContext({
+    taskStore: new TaskStore(),
+});
 
-export const useStore = (): TaskStore => useContext(StoreContext);
+export const useStore = () => useContext(StoreContext);
